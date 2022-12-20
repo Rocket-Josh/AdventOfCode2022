@@ -6,13 +6,16 @@
 #define TRUE 1
 #define FALSE 0
 
-void DayThree_PartOne();
-void DayThree_PartTwo();
-int get_score();
+int daythree_partone();
+int daythree_parttwo();
+char* strndup(const char* s, size_t n);
+void split_string(char* src, size_t index, char** outLeft, char** outRight);
+int get_score(char c);
 
 int main()
 {
-	DayThree_PartOne();
+	daythree_partone();
+	daythree_parttwo();
 }
 
 FILE* LoadDayThreeFile(char* filePath)
@@ -23,28 +26,7 @@ FILE* LoadDayThreeFile(char* filePath)
 	return ptr;
 }
 
-char* strndup(const char* s, size_t n)
-{
-	size_t len = strlen(s);
-	if (len > n) len = n;
-
-	char* new_str = malloc(len+1);
-	if (new_str == NULL) return NULL;
-
-	new_str[len] = 0;
-	return (char *)memcpy(new_str, s, len);
-}
-
-void split_string(char* src, size_t index, char** outLeft, char** outRight)
-{
-	char* left = strndup(src, index);
-	char* right = strndup(src + index, strlen(src + index));
-
-	*outLeft = left;
-	*outRight = right;
-}
-
-void DayThree_PartOne()
+int daythree_partone()
 {
 	// 2 large 'compartments'
 	// All items of a type are to go into exactly one of the compartments
@@ -73,7 +55,7 @@ void DayThree_PartOne()
 	if (!ptr)
 	{
 		printf("Failed to open file");
-		return;
+		return 1;
 	}
 
 	int total = 0;
@@ -139,8 +121,131 @@ void DayThree_PartOne()
 
 	printf("Rucksack total score: %d\n", total);
 	fclose(ptr);
+	return 0;
 }
 
+int daythree_parttwo()
+{
+	// Group of 3 (lines)
+	// Find char present in all 3 lines
+	// Tally up score for that char (ONCE)
+
+	const char* filePath = "C:\\Repos\\AdventOfCode\\AdventOfCode2022\\AdventOfCode2022\\AoC_C\\DataFiles\\DayThreeData.txt";
+	//const char* filePath = "C:\\Repos\\AdventOfCode\\AdventOfCode2022\\AdventOfCode2022\\AoC_C\\DataFiles\\DayThreeExample.txt";
+
+	FILE* ptr = LoadDayThreeFile(filePath);
+
+	if (ptr == NULL)
+	{
+		fprintf(stderr, "Out of memory");
+		return 1;
+	}
+
+	int totalScore = 0;
+
+	// Keeps track of which line we are currently on
+	//	helps with manipulation of the correct line
+	int lineCounter = 0;
+	// Size of a group. Used to track how many lines
+	//	to observe at once in one group
+	int grp_size = 3;
+	// Store all the lines for this group
+	char line_grp[3][255];
+	// Initialise the array of strings to be empty
+	memset(line_grp, 0, sizeof(line_grp));
+
+	int buffer = 255;
+	char line_buf[255];
+	while (fgets(line_buf, buffer, ptr))
+	{		
+		// Add the current line to the 2D array of strings
+		strncat(line_grp[lineCounter], line_buf, strlen(line_buf));
+
+		// If we aren't at the end of a group (every 3rd line) skip to next line
+		//	and increment our counter
+		if (lineCounter < grp_size - 1)
+		{
+			lineCounter++;
+			continue;
+		}
+
+		// The group identifier. If NULL then it means the character being checked
+		//	is not present in all 3 lines. By the end of each group this should not be NULL
+		char curr_group_id = NULL;
+		// Iterate over the current line (3rd line)
+		//	and compare it to the other two previous lines
+		for (int i = 0; i < strlen(line_buf); i++)
+		{
+			// If at this point we still have the 'curr_group_id' set, that means all
+			//	lines in this group had that character meaning we can stop our search
+			if (curr_group_id != NULL)
+			{
+				break;
+			}
+
+			// Ignore special characters
+			if (line_buf[i] == '\n' || line_buf[i] == '\0')
+			{
+				continue;
+			}
+
+			// Iterate over the other lines in the group
+			//	(We are line 3 currently, so look at lines 1 and 2)
+			for (int j = 0; j < grp_size - 1; j++)
+			{
+				// If we are looking at a potential group id (its not null)
+				//	check if it is in the current line
+				//	If not in current line set id to null and go to next character
+				if (curr_group_id != NULL)
+				{
+					if (strchr(line_grp[j], curr_group_id) == NULL)
+					{
+						curr_group_id = NULL;
+						break;
+					}
+				}
+				// Otherwise if there is no potential group ID currently (it IS null)
+				//	check if the current line contains this character
+				//	if not go to next character
+				else if (strchr(line_grp[j], line_buf[i]) == NULL)
+				{
+					break;
+				}
+
+				// If this line contains the character, set the potential group id and check next line
+				curr_group_id = line_buf[i];
+			}
+		}
+		totalScore += get_score(curr_group_id);
+		memset(line_grp, 0, sizeof(line_grp));
+		lineCounter = 0;
+	}
+	
+	printf("D3P2 Total Score: %d\n", totalScore);
+	fclose(ptr);
+	return 0;
+}
+
+char* strndup(const char* s, size_t n)
+{
+	size_t len = strlen(s);
+	if (len > n) len = n;
+
+	char* new_str = malloc(len + 1);
+	if (new_str == NULL) return NULL;
+
+	new_str[len] = 0;
+	return (char*)memcpy(new_str, s, len);
+}
+
+void split_string(char* src, size_t index, char** outLeft, char** outRight)
+{
+	char* left = strndup(src, index);
+	char* right = strndup(src + index, strlen(src + index));
+
+	*outLeft = left;
+	*outRight = right;
+}
 
 int get_score(char c)
 {
