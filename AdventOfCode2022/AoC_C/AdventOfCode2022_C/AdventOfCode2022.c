@@ -1,20 +1,50 @@
 #include <stdio.h>
 #include <stdlib.h>
-
-#pragma warning(disable : 4996)
+#include <string.h>
 
 #define BOOL char
 #define TRUE 1
 #define FALSE 0
 
-void DayThree();
+void DayThree_PartOne();
+void DayThree_PartTwo();
+int get_score();
 
 int main()
 {
-	DayThree();
+	DayThree_PartOne();
 }
 
-void DayThree()
+FILE* LoadDayThreeFile(char* filePath)
+{
+
+	FILE* ptr = fopen(filePath, "r");
+
+	return ptr;
+}
+
+char* strndup(const char* s, size_t n)
+{
+	size_t len = strlen(s);
+	if (len > n) len = n;
+
+	char* new_str = malloc(len+1);
+	if (new_str == NULL) return NULL;
+
+	new_str[len] = 0;
+	return (char *)memcpy(new_str, s, len);
+}
+
+void split_string(char* src, size_t index, char** outLeft, char** outRight)
+{
+	char* left = strndup(src, index);
+	char* right = strndup(src + index, strlen(src + index));
+
+	*outLeft = left;
+	*outRight = right;
+}
+
+void DayThree_PartOne()
 {
 	// 2 large 'compartments'
 	// All items of a type are to go into exactly one of the compartments
@@ -34,23 +64,25 @@ void DayThree()
 	// Data Start	: Text file
 	// Data End		: per line left and right
 
-	const char* filePath = "C:\\Users\\Joshua18\\source\\repos\\AdventOfCode2022\\AoC_C\\DataFiles\\DayThreeData.txt";
-	//const char* filePath = "C:\\Users\\Joshua18\\source\\repos\\AdventOfCode2022\\AoC_C\\DataFiles\\DayThreeExample.txt";
 
-	int bufferLength = 255;
-	char line_buf[255];
-	FILE* ptr = fopen(filePath, "r");
+	const char* filePath = "C:\\Repos\\AdventOfCode\\AdventOfCode2022\\AdventOfCode2022\\AoC_C\\DataFiles\\DayThreeData.txt";
+	//const char* filePath = "C:\\Repos\\AdventOfCode\\AdventOfCode2022\\AdventOfCode2022\\AoC_C\\DataFiles\\DayThreeExample.txt";
+
+	FILE* ptr = LoadDayThreeFile(filePath);
 
 	if (!ptr)
 	{
 		printf("Failed to open file");
-		return EXIT_FAILURE;
+		return;
 	}
 
 	int total = 0;
+	int bufferLength = 255;
+	char line_buf[255];
+
 	while (fgets(line_buf, bufferLength, ptr))
 	{
-		int len = strlen(line_buf);
+		size_t len = strlen(line_buf);
 
 		// Check for hidden characters (New Line characters) 
 		//	if new line char is found, ignore it by setting the character to '\0' (null character)
@@ -62,18 +94,18 @@ void DayThree()
 		}
 
 		// Calculate the lengths of both the left and right side of the line
-		int lhs = len / 2;
-		int rhs = len - lhs;
+		size_t splitPoint = len / 2;
 
-		// Copy the lhs of the string into a new char array (string)
-		char* s1 = malloc(lhs + 1);
-		memcpy(s1, line_buf, lhs);
-		s1[lhs] = '\0';
+		char* s1 = NULL;
+		char* s2 = NULL;
 
-		// Copy the rhs of the string into a separate char array
-		char* s2 = malloc(rhs + 1);
-		memcpy(s2, line_buf + lhs, rhs);
-		s2[rhs] = '\0';
+		split_string(line_buf, splitPoint, &s1, &s2);
+
+		if (s1 == NULL || s2 == NULL)
+		{
+			fprintf(stderr, "Out of Memory");
+			exit(1);
+		}
 
 		// Store the characters we've already checked on this line
 		//	we don't want to tally the points twice
@@ -83,7 +115,7 @@ void DayThree()
 		// Iterate the LHS string and compare with RHS
 		//	if we have a matching character on both sides, we need to
 		//	tally the score
-		for (int i = 0; i < strlen(s1); i++)
+		for (int i = 0; i < strlen(s1); ++i)
 		{
 			if (strchr(s2, s1[i]) == NULL)
 			{
@@ -98,7 +130,7 @@ void DayThree()
 			// Append this character to our 'tracked' string
 			//	so we don't count this character twice
 			strncat(checkedChars, &s1[i], 1);
-			total += getScore(s1[i]);
+			total += get_score(s1[i]);
 		}
 
 		free(s1);
@@ -109,7 +141,8 @@ void DayThree()
 	fclose(ptr);
 }
 
-int getScore(char c)
+
+int get_score(char c)
 {
 	// 1-based scoring system
 	int num = 1;
