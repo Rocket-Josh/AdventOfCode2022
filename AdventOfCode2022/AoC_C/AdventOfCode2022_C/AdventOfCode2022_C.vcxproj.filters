@@ -18,5 +18,25 @@
     <ClCompile Include="AdventOfCode2022.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DayThree.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DayFour.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="DayThree.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DayFour.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
