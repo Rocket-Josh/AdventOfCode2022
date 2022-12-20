@@ -11,4 +11,5 @@ int main()
 	daythree_parttwo();
 
 	dayfour_partone();
+	dayfour_parttwo();
 }
